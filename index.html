@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PawfectFind - Premium Pet Services Marketplace in Singapore</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="style.css">
+
 </head>
 <body>
     <header>
@@ -26,23 +28,42 @@
             <div class="header-actions">
                 <div class="cart-icon">
                     <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-badge">2</span>
+                <span class="cart-badge">2</span>
                 </div>
-                <div class="user-icon">
-                    <i class="fas fa-user"></i>
+                <div class="dropdown">
+                    <div class="user-icon dropdown-toggle" id="userIcon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-user"></i>
+                        <span id="userStatus" style="display: none;"></span>
+                        <i class="fas fa-caret-down" style="margin-left: 5px; font-size: 12px;"></i>
+                    </div>
+                    <div class="dropdown-menu" aria-labelledby="userIcon">
+                        <a class="dropdown-item" href="userdashboard.html" id="dashboardLink">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="logout-test.html" id="logoutLink">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                        <a class="dropdown-item" href="login.html" id="loginLink" style="display: none;">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <section class="page-header">
+    <!-- React Booking System will be rendered here -->
+    <div id="root"></div>
+
+    <!--<section class="page-header">
         <div class="container">
             <h1 class="page-title">Singapore's Premier Pet Services Marketplace</h1>
             <p class="breadcrumb">
                 <a href="index.html">Home</a> / Welcome
             </p>
         </div>
-    </section>
+    </section>-->
 
     <main class="main-content">
         <div class="container">
@@ -160,5 +181,744 @@
             </div>
         </div>
     </footer>
+
+    <script type ="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";    
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7K7u4qUTI9C5kOr4dUe6ND6EfnxeXU-Y",
+        authDomain: "pawfectfind-cc73e.firebaseapp.com",
+        projectId: "pawfectfind-cc73e",
+        storageBucket: "pawfectfind-cc73e.firebasestorage.app",
+        messagingSenderId: "9138302822",
+        appId: "1:9138302822:web:945e4e5e46e1a7b0f7a2a7"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    window.getAuth = () => auth;
+
+    // Dropdown functionality
+    function setupDropdown() {
+        const userIcon = document.getElementById('userIcon');
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        
+        if (userIcon && dropdownMenu) {
+            userIcon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                dropdownMenu.classList.remove('show');
+            });
+            
+            // Prevent dropdown from closing when clicking inside it
+            dropdownMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+    }
+
+    // BookNow button functionality
+    // function setupBookNowButtons() {
+    //     document.addEventListener('click', function(e) {
+    //     const bookNowBtn = e.target.closest('.availbookNow-btn');
+        
+    //     if (bookNowBtn && !auth.currentUser) {
+    //         e.preventDefault();
+    //         e.stopPropagation(); // Stop React handler from running
+    //         alert('Please log in to book a service.');
+    //         window.location.href = 'login.html';
+    //         return false;
+    //     }
+    //     }, true); // ← Add 'true' for capture phase
+    // }   
+
+
+    // Set an authentication state observer
+    onAuthStateChanged(auth, (user) => {
+        const userStatus = document.getElementById('userStatus');
+        const loginLink = document.getElementById('loginLink');
+        const logoutLink = document.getElementById('logoutLink');
+        const dashboardLink = document.getElementById('dashboardLink');
+
+        if (user) {
+            // User is signed in message on console for testing
+            console.log('User is signed in:', user.email);
+            
+            // Display welcome message with user email
+            const userEmail = user.email;
+            const displayName = user.displayName || userEmail.split('@')[0]; // Use display name or first part of email
+            userStatus.textContent = `Welcome, ${displayName}`;
+            userStatus.style.display = 'inline';
+            userStatus.style.color = 'var(--primary-brown)';
+            userStatus.style.marginLeft = '5px';
+            userStatus.style.fontSize = '12px';
+            userStatus.style.fontWeight = '600';
+            userStatus.style.maxWidth = '150px';
+            userStatus.style.overflow = 'hidden';
+            userStatus.style.textOverflow = 'ellipsis';
+            userStatus.style.whiteSpace = 'nowrap';
+
+            // Show logout, hide login
+            logoutLink.style.display = 'block';
+            loginLink.style.display = 'none';
+            dashboardLink.style.display = 'block';
+
+        } else {
+            // User is signed out
+            console.log('User is signed out');
+            userStatus.textContent = '';
+            userStatus.style.display = 'none';
+
+            // Show login, hide logout and dashboard
+            logoutLink.style.display = 'none';
+            loginLink.style.display = 'block';
+            dashboardLink.style.display = 'none';
+
+        }
+    }); 
+
+    // Logout functionality 
+    document.getElementById('logoutLink').addEventListener('click', async(e) => {
+        e.preventDefault();
+
+        try {
+            // Close dropdown first
+            document.querySelector('.dropdown-menu').classList.remove('show');
+            
+            // Show logout confirmation
+            const confirmLogout = confirm('Are you sure you want to log out?');
+            if (!confirmLogout) return;
+            
+            // Perform logout
+            await signOut(auth);
+            console.log('User signed out successfully');
+            
+            // Show success message - this will work because no redirect
+            alert('You have been logged out successfully');
+            
+            // NO REDIRECT NEEDED - let onAuthStateChanged update the UI
+            // The page will automatically show the logged-out state
+            
+        } catch (error) {
+            console.error('Logout error:', error);
+            alert('Error signing out. Please try again.');
+        }
+    });
+
+    // Initialize dropdown when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        setupDropdown();
+        // setupBookNowButtons();
+    });
+</script>
+
+    <!-- React Booking System Component -->
+    <!-- React and Babel Scripts -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Enhanced React Booking System Component -->
+    <script type="text/babel">
+        const API_BASE_URL = window.location.hostname.includes('azurewebsites.net') 
+            ? 'https://pawfectfind-backend.azurewebsites.net' 
+            : 'http://localhost:5000';
+        
+        const { useState, useEffect } = React;
+
+const MOCK_VENDORS = [
+    {
+        id: "paws",
+        name: "Happy Paws Grooming",
+        rating: 4.8,
+        services: ["Grooming", "Bath", "Nail Trimming"],
+        price: "From $45",
+        location: "Central Singapore",  // ← Added missing comma here
+        availableSlots: {
+            "2025-09-29": ["09:00 AM", "10:00 AM", "02:00 PM", "03:00 PM"],
+            "2025-09-30": ["09:00 AM", "11:00 AM", "02:00 PM"],
+            "2025-10-01": ["10:00 AM", "02:00 PM", "03:00 PM"]
+        },
+        isAvailable: true
+    },
+    {
+        id: "happy",
+        name: "Happy Tails Pet Hotel",
+        rating: 4.9,
+        services: ["Pet Hotel", "Daycare", "Grooming"],
+        price: "From $60/night",
+        location: "East Singapore",
+        availableSlots: {
+            "2025-09-29": ["09:00 AM", "11:00 AM", "02:00 PM"],
+            "2025-09-30": ["10:00 AM", "02:00 PM", "04:00 PM"],
+            "2025-10-01": ["09:00 AM", "11:00 AM", "03:00 PM"]
+        },
+        isAvailable: true
+    },
+    {
+        id: "paradise",
+        name: "Professional Pet Sitters",
+        rating: 4.7,
+        services: ["Sitter", "Walking", "Feeding"],
+        price: "From $30/visit",
+        location: "Nationwide",
+        availableSlots: {
+            "2025-09-29": ["10:00 AM", "02:00 PM", "05:00 PM"],
+            "2025-09-30": ["09:00 AM", "03:00 PM", "05:00 PM"],
+            "2025-10-01": ["10:00 AM", "02:00 PM", "04:00 PM"]
+        },
+        isAvailable: true
+    },
+    {
+        id: "elite",
+        name: "Elite Pet Training",
+        rating: 4.6,
+        services: ["Training", "Behavior Modification"],
+        price: "From $80/session",
+        location: "Central Singapore",
+        availableSlots: {
+            "2025-09-29": ["09:00 AM", "11:00 AM", "03:00 PM"],
+            "2025-09-30": ["10:00 AM", "02:00 PM", "04:00 PM"],
+            "2025-10-01": ["09:00 AM", "11:00 AM", "03:00 PM"]
+        },
+        isAvailable: true
+    }
+];
+
+        const PetServicesApp = () => {
+            // Step 1: Basic Information
+            const [petType, setPetType] = useState('');
+            const [location, setLocation] = useState('');
+            const [petService, setPetService] = useState('');
+            
+            // Step 2: Date & Time
+            const [selectedDate, setSelectedDate] = useState('');
+            const [selectedTime, setSelectedTime] = useState('');
+            
+            // Step 3: Vendor Selection
+            const [selectedVendor, setSelectedVendor] = useState(null);
+            const [vendors, setVendors] = useState([]);
+            const [filteredVendors, setFilteredVendors] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [searchCompleted, setSearchCompleted] = useState(false);
+            
+            // UI States
+            const [showPetDropdown, setShowPetDropdown] = useState(false);
+            const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+            const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+            const [showCalendar, setShowCalendar] = useState(false);
+            const [showTimePicker, setShowTimePicker] = useState(false);
+            // Update the step tracking logic
+            const [currentStep, setCurrentStep] = useState(1); // 1: Basic, 2: DateTime, 3: Results
+            
+            // Add this function to determine step completion
+            const getStepStatus = (stepNumber) => {
+                if (stepNumber < currentStep) return 'completed';
+                if (stepNumber === currentStep) return 'active';
+                return '';
+            };
+
+            // Calendar state
+            const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+            const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+
+            const petTypes = ['Dogs', 'Cats', 'Rabbits', 'Hamsters', 'Guinea Pigs', 'Chinchillas', 'Ferrets', 'Birds', 'Turtles', 'Iguanas'];
+            const locations = ['Central (District 1-2)', 'West (District 5-8, 22-23)', 'East (District 14-18)', 'North (District 19-21, 26-28)', 'South (District 3-4, 9-10)', 'North-East (District 11-13, 24-25)'];
+            const services = ['Grooming', 'Sitter', 'Pet Hotel', 'Training'];
+
+            // Fetch vendors from backend on component mount
+            useEffect(() => {
+                const fetchVendors = async () => {
+                    setLoading(true);
+                    try {
+                        console.log('Attempting to fetch vendors from API...');
+                        const response = await fetch(`${API_BASE_URL}/api/vendors`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            mode: 'cors'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        console.log('Successfully fetched vendors from API');
+                        console.log('API Response:', data);
+                        console.log('First vendor availability field:', data[0]?.availableSlots ? 'availableSlots' : 'availability');
+                        setVendors(data);
+                    } catch (error) {
+                        console.log('API fetch failed, using mock data instead');
+                        console.error('Error details:', error);
+                        setVendors(MOCK_VENDORS);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchVendors();
+            }, []);
+
+            // Close dropdowns when clicking outside
+            useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (!event.target.closest('.dropdown') && !event.target.closest('.datetime-picker')) {
+                        setShowPetDropdown(false);
+                        setShowLocationDropdown(false);
+                        setShowServiceDropdown(false);
+                        setShowCalendar(false);
+                        setShowTimePicker(false);
+                    }
+                };
+
+                document.addEventListener('click', handleClickOutside);
+                return () => document.removeEventListener('click', handleClickOutside);
+            }, []);
+
+            const toggleDropdown = (dropdown) => {
+                setShowPetDropdown(dropdown === 'pet' ? !showPetDropdown : false);
+                setShowLocationDropdown(dropdown === 'location' ? !showLocationDropdown : false);
+                setShowServiceDropdown(dropdown === 'service' ? !showServiceDropdown : false);
+                setShowCalendar(false);
+                setShowTimePicker(false);
+            };
+
+            const toggleCalendar = () => {
+                setShowCalendar(!showCalendar);
+                setShowTimePicker(false);
+            };
+
+            const toggleTimePicker = () => {
+                if (selectedDate) {
+                    setShowTimePicker(!showTimePicker);
+                    setShowCalendar(false);
+                }
+            };
+
+            const handleDateSelect = (day) => {
+                const dateStr = formatDate(day);
+                setSelectedDate(dateStr);
+                setSelectedTime('');
+                setShowCalendar(false);
+                setShowTimePicker(true);
+            };
+
+            const handleTimeSelect = (time) => {
+                setSelectedTime(time);
+                setShowTimePicker(false);
+            };
+
+            // Calendar functions
+            const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
+            const getFirstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
+            
+            const navigateMonth = (direction) => {
+                if (direction === 'prev') {
+                    setCurrentMonth(currentMonth === 0 ? 11 : currentMonth - 1);
+                    setCurrentYear(currentMonth === 0 ? currentYear - 1 : currentYear);
+                } else {
+                    setCurrentMonth(currentMonth === 11 ? 0 : currentMonth + 1);
+                    setCurrentYear(currentMonth === 11 ? currentYear + 1 : currentYear);
+                }
+            };
+            
+            const formatDate = (day) => `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+                // Modify the searchVendors function to use mock data if API fails:
+                // Fix the searchVendors function:
+                const searchVendors = async () => {
+                    if (!petType || !location || !petService || !selectedDate || !selectedTime) {
+                        alert('Please complete all fields before searching');
+                        return;
+                    }
+
+                    setLoading(true);
+                    setSearchCompleted(false);
+                    
+                    try {
+                        // Filter vendors based on service type and availability
+                        const matchedVendors = vendors.filter(vendor => {
+                            // Check if vendor offers the selected service
+                            const hasService = vendor.services.some(service => 
+                                service.toLowerCase().includes(petService.toLowerCase())
+                            );
+                            
+                            // Check if vendor has availability for selected date and time
+                            const hasAvailability = vendor.availableSlots && 
+                                                vendor.availableSlots[selectedDate] && 
+                                                vendor.availableSlots[selectedDate].includes(selectedTime);
+                            
+                            return hasService && hasAvailability;
+                        });
+                        
+                        setFilteredVendors(matchedVendors);
+                        setSearchCompleted(true);
+                        setCurrentStep(3);
+                        
+                        if (matchedVendors.length === 0) {
+                            alert('No vendors available for your selected date and time. Please try different options.');
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error searching vendors:', error);
+                        alert('Error searching for vendors. Please try again.');
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+            const resetSearch = () => {
+                setSearchCompleted(false);
+                setFilteredVendors([]);
+                setSelectedVendor(null);
+                setCurrentStep(1);
+            };
+
+            const proceedToBooking = (vendor) => {
+                // Check if user is logged in
+                const auth = window.getAuth && window.getAuth();
+                const user = auth ? auth.currentUser : null;
+                
+                if (!user) {
+                    // User not logged in - save booking data and redirect to login
+                    const bookingData = {
+                        service: petService,
+                        vendor: vendor.name,
+                        vendorId: vendor.id,
+                        date: selectedDate,
+                        time: selectedTime,
+                        price: vendor.price
+                    };
+                    localStorage.setItem('pendingBooking', JSON.stringify(bookingData));
+                    localStorage.setItem('loginRedirectSource', 'bookNow');
+                    alert('Please log in to book a service.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // User is logged in - proceed with booking
+                localStorage.setItem('bookingService', petService);
+                localStorage.setItem('bookingVendor', vendor.name);
+                localStorage.setItem('bookingVendorId', vendor.id);
+                localStorage.setItem('bookingDate', selectedDate);
+                localStorage.setItem('bookingTime', selectedTime);
+                localStorage.setItem('bookingPrice', vendor.price);
+                
+                window.location.href = `booking-confirmation.html?service=${petService}&vendor=${vendor.name}&date=${selectedDate}&time=${selectedTime}&price=${vendor.price}`;
+            };
+
+            const renderCalendar = () => {
+                const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+                const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                
+                let days = [];
+                
+                // Add empty days for the first week
+                for (let i = 0; i < firstDay; i++) {
+                    days.push(<div key={`empty-${i}`} className="calendar-day other-month"></div>);
+                }
+                
+                // Add days of the month
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = formatDate(day);
+                    const isSelected = selectedDate === dateStr;
+                    
+                    days.push(
+                        <div 
+                            key={day} 
+                            className={`calendar-day available ${isSelected ? 'selected' : ''}`}
+                            onClick={() => handleDateSelect(day)}
+                        >
+                            {day}
+                        </div>
+                    );
+                }
+                
+                return (
+                    <div className="calendar-popup">
+                        <div className="calendar-container">
+                            <div className="calendar-header">
+                                <button className="calendar-nav prev" onClick={() => navigateMonth('prev')}>
+                                    <i className="fas fa-chevron-left"></i>
+                                </button>
+                                <div className="calendar-month">
+                                    {monthNames[currentMonth]} {currentYear}
+                                </div>
+                                <button className="calendar-nav next" onClick={() => navigateMonth('next')}>
+                                    <i className="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            
+                            <div className="calendar-grid">
+                                <div className="calendar-weekday">Sun</div>
+                                <div className="calendar-weekday">Mon</div>
+                                <div className="calendar-weekday">Tue</div>
+                                <div className="calendar-weekday">Wed</div>
+                                <div className="calendar-weekday">Thu</div>
+                                <div className="calendar-weekday">Fri</div>
+                                <div className="calendar-weekday">Sat</div>
+                                {days}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderTimePicker = () => {
+                const timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
+                
+                return (
+                    <div className="time-picker-popup">
+                        <div className="time-picker-container">
+                            <h4>Select Time Slot</h4>
+                            <div className="time-slots">
+                                {timeSlots.map((time, index) => (
+                                    <div 
+                                        key={index} 
+                                        className={`time-slot ${selectedTime === time ? 'selected' : ''}`}
+                                        onClick={() => handleTimeSelect(time)}
+                                    >
+                                        {time}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div>
+                    <section className="hero">
+                        <div className="container hero-content">
+                            <h1>Premium Pet Services Matching in Singapore</h1>
+                            <p>Find the best grooming, sitting, and hotel services for your beloved pets</p>
+                        </div>
+                    </section>
+
+                    <div className="container">
+                        <div className="search-section">
+                            <h2 className="search-title">Find the perfect service for your pet</h2>
+                            
+                            {/* Progress Steps */}
+                            <div className="progress-steps">
+                                <div className={`step ${getStepStatus(1)}`}>
+                                    <div className="step-number">1</div>
+                                    <div className="step-label">Basic Info</div>
+                                </div>
+                                <div className={`step ${getStepStatus(2)}`}>
+                                    <div className="step-number">2</div>
+                                    <div className="step-label">Date & Time</div>
+                                </div>
+                                <div className={`step ${getStepStatus(3)}`}>
+                                    <div className="step-number">3</div>
+                                    <div className="step-label">Choose Vendor</div>
+                                </div>
+                            </div>
+
+                            {/* Step 1: Basic Information */}
+                            {(currentStep === 1 || !searchCompleted) && (
+                                <div className="filters-grid">
+                                    <div className="filter-group">
+                                        <label>Pet Type *</label>
+                                        <div className="dropdown">
+                                            <div className="dropdown-select" onClick={(e) => { e.stopPropagation(); toggleDropdown('pet'); }}>
+                                                <span>{petType || 'Select pet type'}</span>
+                                                <i className={`fas fa-chevron-${showPetDropdown ? 'up' : 'down'}`}></i>
+                                            </div>
+                                            {showPetDropdown && (
+                                                <div className="dropdown-list show">
+                                                    {petTypes.map((pet, index) => (
+                                                        <div key={index} className="dropdown-item" onClick={() => { setPetType(pet); setShowPetDropdown(false); }}>
+                                                            {pet}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="filter-group">
+                                        <label>Location *</label>
+                                        <div className="dropdown">
+                                            <div className="dropdown-select" onClick={(e) => { e.stopPropagation(); toggleDropdown('location'); }}>
+                                                <span>{location || 'Select location'}</span>
+                                                <i className={`fas fa-chevron-${showLocationDropdown ? 'up' : 'down'}`}></i>
+                                            </div>
+                                            {showLocationDropdown && (
+                                                <div className="dropdown-list show">
+                                                    {locations.map((loc, index) => (
+                                                        <div key={index} className="dropdown-item" onClick={() => { setLocation(loc); setShowLocationDropdown(false); }}>
+                                                            {loc}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="filter-group">
+                                        <label>Pet Service *</label>
+                                        <div className="dropdown">
+                                            <div className="dropdown-select" onClick={(e) => { e.stopPropagation(); toggleDropdown('service'); }}>
+                                                <span>{petService || 'Select service'}</span>
+                                                <i className={`fas fa-chevron-${showServiceDropdown ? 'up' : 'down'}`}></i>
+                                            </div>
+                                            {showServiceDropdown && (
+                                                <div className="dropdown-list show">
+                                                    {services.map((service, index) => (
+                                                        <div key={index} className="dropdown-item" onClick={() => { setPetService(service); setShowServiceDropdown(false); }}>
+                                                            {service}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="filter-group">
+                                        <button 
+                                            className="btn btn-primary btn-next"
+                                            onClick={() => {
+                                                if (petType && location && petService) {
+                                                    setCurrentStep(2);
+                                                } else {
+                                                    alert('Please select pet type, location, and service first');
+                                                }
+                                            }}
+                                        >
+                                            Next: Date & Time <i className="fas fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Step 2: Date & Time Selection */}
+                            {currentStep === 2 && (
+                                <div className="datetime-section">
+                                    <h3>Select Date & Time</h3>
+                                    <div className="filters-grid">
+                                        <div className="filter-group full-width">
+                                            <label>Preferred Date *</label>
+                                            <div className="datetime-picker">
+                                                <div className="date-input">
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="Select date" 
+                                                        value={selectedDate ? new Date(selectedDate).toLocaleDateString() : ''}
+                                                        readOnly 
+                                                        onClick={(e) => { e.stopPropagation(); toggleCalendar(); }}
+                                                    />
+                                                    <i className="fas fa-calendar"></i>
+                                                    {showCalendar && renderCalendar()}
+                                                </div>
+                                                
+                                                <div className="time-input">
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="Select time" 
+                                                        value={selectedTime}
+                                                        readOnly 
+                                                        onClick={(e) => { e.stopPropagation(); toggleTimePicker(); }}
+                                                    />
+                                                    <i className="fas fa-clock"></i>
+                                                    {showTimePicker && renderTimePicker()}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="filter-group full-width">
+                                            <div className="action-buttons">
+                                                <button 
+                                                    className="btn btn-secondary"
+                                                    onClick={() => setCurrentStep(1)}
+                                                >
+                                                    <i className="fas fa-arrow-left"></i> Back
+                                                </button>
+                                                <button 
+                                                    className="btn btn-primary"
+                                                    onClick={searchVendors}
+                                                    disabled={loading}
+                                                >
+                                                    {loading ? 'Searching...' : 'Search Services'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Step 3: Vendor Results */}
+                            {currentStep === 3 && searchCompleted && (
+                                <div className="vendor-results">
+                                    <div className="results-header">
+                                        <h3>Available Vendors</h3>
+                                        <p>Found {filteredVendors.length} available vendors for {petService} in {location}</p>
+                                        <button className="btn btn-outline" onClick={resetSearch}>
+                                            <i className="fas fa-refresh"></i> New Search
+                                        </button>
+                                    </div>
+
+                                    {loading ? (
+                                        <div className="loading">Searching for available vendors...</div>
+                                    ) : filteredVendors.length === 0 ? (
+                                        <div className="no-results">
+                                            <p>No vendors available for your selected date and time. Please try different options.</p>
+                                            <button className="btn btn-primary" onClick={resetSearch}>
+                                                Try Different Options
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="vendor-cards">
+                                            {filteredVendors.map(vendor => (
+                                                <div 
+                                                    key={vendor.id} 
+                                                    className="vendor-card available-vendor"
+                                                >
+                                                    <div className="vendor-header">
+                                                        <div className="vendor-name">{vendor.name}</div>
+                                                        <div className="vendor-rating">
+                                                            {'★'.repeat(Math.floor(vendor.rating))}
+                                                            {'☆'.repeat(5 - Math.floor(vendor.rating))}
+                                                            ({vendor.rating})
+                                                        </div>
+                                                    </div>
+                                                    <div className="vendor-services">
+                                                        {vendor.services.map(service => (
+                                                            <span key={service} className="vendor-service-tag">{service}</span>
+                                                        ))}
+                                                    </div>
+                                                    <div className="vendor-price">{vendor.price}</div>
+                                                    <div className="vendor-availability available">
+                                                        ✅ Available on {selectedDate} at {selectedTime}
+                                                    </div>
+                                                    <button className="btn btn-primary availbookNow-btn" onClick={() => proceedToBooking(vendor)}>
+                                                        Book Now
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PetServicesApp />);
+    </script>
 </body>
 </html>
